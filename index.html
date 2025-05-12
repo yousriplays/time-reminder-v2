@@ -210,6 +210,12 @@
             border-radius: 8px;
             padding: 8px;
             font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+        #chat-auth label {
+            display: block;
+            font-size: 1.5rem;
+            margin-bottom: 8px;
         }
     </style>
 </head>
@@ -219,8 +225,19 @@
     <!-- Chat Sidebar -->
     <div id="chat-sidebar">
         <div id="chat-auth" class="hidden">
-            <input id="chat-password" type="text" placeholder="Enter daily password">
-            <button id="chat-login" class="w-full mt-4 px-4 py-2 font-bold rounded" style="background-color: var(--button-bg); color: var(--button-fg);">Login</button>
+            <div id="chat-password-section">
+                <input id="chat-password" type="text" placeholder="Enter daily password">
+                <button id="chat-login" class="w-full mt-4 px-4 py-2 font-bold rounded" style="background-color: var(--button-bg); color: var(--button-fg);">Submit Password</button>
+            </div>
+            <div id="chat-second-password-section" class="hidden">
+                <input id="chat-second-password" type="text" placeholder="Re-enter daily password">
+                <button id="chat-second-login" class="w-full mt-4 px-4 py-2 font-bold rounded" style="background-color: var(--button-bg); color: var(--button-fg);">Submit Second Password</button>
+            </div>
+            <div id="user-password-section" class="hidden">
+                <label for="user-password">Enter user password</label>
+                <input id="user-password" type="text" placeholder="7obi or 7abibti">
+                <button id="user-login" class="w-full mt-4 px-4 py-2 font-bold rounded" style="background-color: var(--button-bg); color: var(--button-fg);">Login as User</button>
+            </div>
         </div>
         <div id="chat-content" class="flex flex-col h-full hidden">
             <div id="chat-messages"></div>
@@ -337,6 +354,21 @@
 
         let currentUser = null;
         let replyToMessageId = null;
+        let firstChatPassword = null;
+
+        // Check last chat access
+        function requiresDoublePassword() {
+            const lastAccess = localStorage.getItem('lastChatAccess');
+            if (!lastAccess) return true;
+            const lastAccessTime = parseInt(lastAccess);
+            const now = Date.now();
+            const fiveHours = 5 * 60 * 60 * 1000; // 5 hours in ms
+            return (now - lastAccessTime) > fiveHours;
+        }
+
+        function recordChatAccess() {
+            localStorage.setItem('lastChatAccess', Date.now().toString());
+        }
 
         // Configuration management
         function loadConfig() {
@@ -395,7 +427,7 @@
             const messages = loadChatMessages();
             messages.forEach(msg => {
                 if (!msg.readBy) msg.readBy = [];
-                if (currentUser && !msg.readBy.includes(currentUser)) {
+                if (currentUser && !m.readBy.includes(currentUser)) {
                     msg.readBy.push(currentUser);
                 }
             });
@@ -585,8 +617,15 @@
         const chatToggle = document.getElementById('chat-toggle');
         const chatAuth = document.getElementById('chat-auth');
         const chatContent = document.getElementById('chat-content');
+        const chatPasswordSection = document.getElementById('chat-password-section');
+        const chatSecondPasswordSection = document.getElementById('chat-second-password-section');
+        const userPasswordSection = document.getElementById('user-password-section');
         const chatPassword = document.getElementById('chat-password');
+        const chatSecondPassword = document.getElementById('chat-second-password');
+        const userPassword = document.getElementById('user-password');
         const chatLogin = document.getElementById('chat-login');
+        const chatSecondLogin = document.getElementById('chat-second-login');
+        const userLogin = document.getElementById('user-login');
         const chatInput = document.getElementById('chat-input');
         const chatSend = document.getElementById('chat-send');
         const chatPhoto = document.getElementById('chat-photo');
@@ -600,6 +639,12 @@
                 if (!currentUser) {
                     chatAuth.classList.remove('hidden');
                     chatContent.classList.add('hidden');
+                    chatPasswordSection.classList.remove('hidden');
+                    chatSecondPasswordSection.classList.add('hidden');
+                    userPasswordSection.classList.add('hidden');
+                    chatPassword.value = '';
+                    chatSecondPassword.value = '';
+                    userPassword.value = '';
                 } else {
                     chatAuth.classList.add('hidden');
                     chatContent.classList.remove('hidden');
@@ -616,26 +661,67 @@
             const today = new Date();
             const dailyPassword = generateDailyPassword(today);
             if (input === dailyPassword) {
-                const userPrompt = prompt('Enter username (7obi or 7abibti):');
-                if (userPrompt && ['7obi', '7abibti'].includes(userPrompt.trim())) {
-                    currentUser = userPrompt.trim();
-                    chatAuth.classList.add('hidden');
-                    chatContent.classList.remove('hidden');
-                    chatPassword.value = ''; // Clear password input
-                    renderChatMessages();
+                firstChatPassword = input;
+                if (requiresDoublePassword()) {
+                    chatPasswordSection.classList.add('hidden');
+                    chatSecondPasswordSection.classList.remove('hidden');
+                    userPasswordSection.classList.add('hidden');
+                    chatSecondPassword.focus();
                 } else {
-                    alert('Invalid username. Use "7obi" or "7abibti".');
+                    recordChatAccess();
+                    chatPasswordSection.classList.add('hidden');
+                    chatSecondPasswordSection.classList.add('hidden');
+                    userPasswordSection.classList.remove('hidden');
+                    userPassword.focus();
                 }
+                chatPassword.value = '';
             } else {
                 alert('Invalid password. Ask for the daily password.');
             }
         });
 
+        chatSecondLogin.addEventListener('click', () => {
+            const input = chatSecondPassword.value.trim();
+            const today = new Date();
+            const dailyPassword = generateDailyPassword(today);
+            if (input === dailyPassword && input === firstChatPassword) {
+                recordChatAccess();
+                chatPasswordSection.classList.add('hidden');
+                chatSecondPasswordSection.classList.add('hidden');
+                userPasswordSection.classList.remove('hidden');
+                chatSecondPassword.value = '';
+                userPassword.focus();
+            } else {
+                alert('Second password incorrect or does not match.');
+                chatSecondPassword.value = '';
+            }
+        });
+
+        userLogin.addEventListener('click', () => {
+            const input = userPassword.value.trim();
+            if (['7obi', '7abibti'].includes(input)) {
+                currentUser = input;
+                chatAuth.classList.add('hidden');
+                chatContent.classList.remove('hidden');
+                userPassword.value = '';
+                renderChatMessages();
+            } else {
+                alert('Invalid user password. Use "7obi" or "7abibti".');
+                userPassword.value = '';
+            }
+        });
+
         chatLogout.addEventListener('click', () => {
             currentUser = null;
+            firstChatPassword = null;
             chatAuth.classList.remove('hidden');
             chatContent.classList.add('hidden');
+            chatPasswordSection.classList.remove('hidden');
+            chatSecondPasswordSection.classList.add('hidden');
+            userPasswordSection.classList.add('hidden');
             chatPassword.value = '';
+            chatSecondPassword.value = '';
+            userPassword.value = '';
             chatInput.value = '';
             chatInput.style.height = '40px';
             replyToMessageId = null;
