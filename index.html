@@ -228,6 +228,7 @@
                 <textarea id="chat-input" placeholder="Type a message..."></textarea>
                 <button id="chat-send" class="px-4 py-2 font-bold rounded" style="background-color: var(--button-bg); color: var(--button-fg);">Send</button>
                 <button id="chat-photo" class="px-4 py-2 font-bold rounded" style="background-color: var(--settings-bg); color: var(--settings-fg);">🖼️</button>
+                <button id="chat-logout" class="px-4 py-2 font-bold rounded" style="background-color: var(--settings-bg); color: var(--settings-fg);">Log Out</button>
                 <input id="chat-photo-input" type="file" accept="image/*" class="hidden">
             </div>
         </div>
@@ -590,6 +591,7 @@
         const chatSend = document.getElementById('chat-send');
         const chatPhoto = document.getElementById('chat-photo');
         const chatPhotoInput = document.getElementById('chat-photo-input');
+        const chatLogout = document.getElementById('chat-logout');
 
         chatToggle.addEventListener('click', () => {
             chatSidebar.classList.toggle('open');
@@ -619,6 +621,7 @@
                     currentUser = userPrompt.trim();
                     chatAuth.classList.add('hidden');
                     chatContent.classList.remove('hidden');
+                    chatPassword.value = ''; // Clear password input
                     renderChatMessages();
                 } else {
                     alert('Invalid username. Use "7obi" or "7abibti".');
@@ -626,6 +629,17 @@
             } else {
                 alert('Invalid password. Ask for the daily password.');
             }
+        });
+
+        chatLogout.addEventListener('click', () => {
+            currentUser = null;
+            chatAuth.classList.remove('hidden');
+            chatContent.classList.add('hidden');
+            chatPassword.value = '';
+            chatInput.value = '';
+            chatInput.style.height = '40px';
+            replyToMessageId = null;
+            chatInput.placeholder = 'Type a message...';
         });
 
         chatSend.addEventListener('click', () => {
