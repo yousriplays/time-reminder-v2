@@ -427,7 +427,7 @@
             const messages = loadChatMessages();
             messages.forEach(msg => {
                 if (!msg.readBy) msg.readBy = [];
-                if (currentUser && !m.readBy.includes(currentUser)) {
+                if (currentUser && !msg.readBy.includes(currentUser)) {
                     msg.readBy.push(currentUser);
                 }
             });
@@ -453,7 +453,7 @@
                 if (msg.image) {
                     content += `<img src="${msg.image}" alt="Image">`;
                 }
-                if (msg.editHistory && msg.editHistory.length > 0 && currentUser === '7abibti') {
+                if (msg.editHistory && msg.editHistory.length > 0 && currentUser === 'hiba') {
                     content += `<div class="edit-history">Edited: ${msg.editHistory.map(e => e.text).join(' → ')}</div>`;
                 }
                 div.innerHTML = content;
@@ -468,7 +468,7 @@
                 div.appendChild(actions);
                 chatMessages.appendChild(div);
             });
-            if (currentUser === '7abibti') {
+            if (currentUser === 'hiba') {
                 deletedMessages.forEach(msg => {
                     const div = document.createElement('div');
                     div.className = 'chat-message deleted-message';
@@ -699,8 +699,14 @@
 
         userLogin.addEventListener('click', () => {
             const input = userPassword.value.trim();
-            if (['7obi', '7abibti'].includes(input)) {
-                currentUser = input;
+            if (input === '7abibti') {
+                currentUser = 'yousri';
+                chatAuth.classList.add('hidden');
+                chatContent.classList.remove('hidden');
+                userPassword.value = '';
+                renderChatMessages();
+            } else if (input === '7obi') {
+                currentUser = 'hiba';
                 chatAuth.classList.add('hidden');
                 chatContent.classList.remove('hidden');
                 userPassword.value = '';
