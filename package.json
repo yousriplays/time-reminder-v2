@@ -1,0 +1,14 @@
+{
+    "name": "alpha-timer",
+    "version": "1.0.0",
+    "description": "A timer and chat application",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js"
+    },
+    "dependencies": {
+        "express": "^4.17.1",
+        "socket.io": "^4.5.0",
+        "multer": "^1.4.5-lts.1"
+    }
+}
